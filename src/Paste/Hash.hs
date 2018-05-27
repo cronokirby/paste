@@ -11,9 +11,9 @@ import Crypto.Hash (hash, Digest, SHA256(..))
 import Data.Byteable (toBytes)
 import Data.ByteArray.Encoding (convertToBase, Base (..))
 import Data.ByteString (ByteString)
-import Data.ByteString.Char8 (unpack)
+import Data.ByteString.Char8 (pack, unpack)
 import Data.Text (cons, Text)
-import Data.Text.Encoding (decodeUtf8)
+import Data.Text.Encoding (encodeUtf8, decodeUtf8)
 
 
 -- | Represents a hash of a file
@@ -30,5 +30,6 @@ toPath (Hash bs) = cons '/' (decodeUtf8 bs)
 -- Uses SHA256 as a hashing algorithm, and an unpadded url-safe base64 encoding
 -- following that.
 -- This can be safely converted to a string
-hashBase64 :: ByteString -> Hash
-hashBase64 bs = Hash . convertToBase Base64URLUnpadded . toBytes $ (hash bs :: Digest SHA256)
+hashBase64 :: Text -> Hash
+hashBase64 bs =
+    Hash . convertToBase Base64URLUnpadded . toBytes $ (hash (encodeUtf8 bs) :: Digest SHA256)

@@ -23,13 +23,14 @@ import Paste.Hash (Hash(..), toPath, hashBase64, unpackHash)
 basePath :: String
 basePath = ".files"
 
-newFile :: B.ByteString -> IO Hash
+newFile :: T.Text -> IO Hash
 newFile content = do
     let hash = hashBase64 content
-    B.writeFile (basePath ++ "/" ++ unpackHash hash) content
+    T.writeFile (basePath ++ "/" ++ unpackHash hash) content
     return hash
 
 
+fileNotFound :: Html ()
 fileNotFound = do
     h1_ "File not found..."
     p_ "Sorry, we couldn't find that file for you..."
@@ -37,8 +38,10 @@ fileNotFound = do
 app :: SpockM () () () ()
 app = do
     get root . lucid $ do
-        h1_ "Hello!"
-        p_ "How are you today?"
+        h2_ "Create a new paste:"
+        form_ [method_ "post", action_ "new"] $ do
+            textarea_ [name_ "contents"] ""
+            input_ [type_ "submit", value_ "Submit"]
     get ("raw" <//> var) $ \name -> do
         let path = basePath ++ "/" ++ T.unpack name
         doesExist <- liftIO $ doesPathExist path
@@ -48,7 +51,7 @@ app = do
                 text content
             else lucid fileNotFound
     post "new" $ do
-        content <- body
+        content <- param' "contents"
         hash <- liftIO $ newFile content
         redirect ("raw" <> toPath hash)
 
